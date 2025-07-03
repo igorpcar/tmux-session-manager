@@ -28,10 +28,30 @@ is_line_type() {
 }
 
 check_saved_session_exists() {
-  local resurrect_file="$(last_resurrect_file)"
-  if [ ! -f $resurrect_file ]; then
-    display_message "Tmux resurrect file not found!"
-    return 1
+  local CURRENT_SESSION_NAME=$(tmux display-message -p '#S')
+  local RESURRECT_DIR_PATH="$(resurrect_dir)" # Assume que resurrect_dir() retorna o caminho
+  local RESURRECT_FILE_EXTENSION="txt"
+
+  local session_file_name="${CURRENT_SESSION_NAME}.${RESURRECT_FILE_EXTENSION}" # Apenas o nome do arquivo, ex: igor.txt
+  local full_session_file_path="${RESURRECT_DIR_PATH}/${session_file_name}"
+  local last_symlink_name="last" # O nome do link que queremos criar
+
+  # Verifica se o arquivo da sessão atual existe
+  if [ ! -f "$full_session_file_path" ]; then
+    tmux display-message "Tmux resurrect file not found for session '${CURRENT_SESSION_NAME}'!"
+    return 1 # Retorna 1 para indicar que o arquivo não foi encontrado
+  else
+    # Se o arquivo existe, cria/atualiza o link simbólico 'last'
+    # Primeiro, muda para o diretório de ressurreição
+    (
+      cd "$RESURRECT_DIR_PATH" || return 1 # Entra no diretório. Se falhar, sai da subshell
+      # Cria o link simbólico relativo. O alvo é apenas o nome do arquivo.
+      ln -sf "$session_file_name" "$last_symlink_name"
+    ) # O parênteses cria uma subshell para o 'cd', evitando que ele afete o diretório principal do script
+
+    # Opcional: exibir uma mensagem de sucesso, se desejar
+    # tmux display-message "Link 'last' atualizado para '${CURRENT_SESSION_NAME}' (relativo)."
+    return 0 # Retorna 0 para indicar sucesso
   fi
 }
 
