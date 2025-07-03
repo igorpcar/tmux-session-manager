@@ -107,12 +107,9 @@ resurrect_dir() {
 _RESURRECT_DIR="$(resurrect_dir)"
 
 resurrect_file_path() {
-  if [ -z "$_RESURRECT_FILE_PATH" ]; then
-    local timestamp="$(date +"%Y%m%dT%H%M%S")"
-    echo "$(resurrect_dir)/${RESURRECT_FILE_PREFIX}_${timestamp}.${RESURRECT_FILE_EXTENSION}"
-  else
-    echo "$_RESURRECT_FILE_PATH"
-  fi
+  local CURRENT_SESSION_NAME=$(tmux display-message -p '#S')
+  local file_path="$(resurrect_dir)/${CURRENT_SESSION_NAME}.${RESURRECT_FILE_EXTENSION}"
+  echo "$file_path"
 }
 _RESURRECT_FILE_PATH="$(resurrect_file_path)"
 
